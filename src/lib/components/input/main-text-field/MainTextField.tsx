@@ -21,6 +21,7 @@ type SIconContainerProps = {
 export const SIconContainer = styled.div<SIconContainerProps>`
     margin: 0;
     outline: none;
+    cursor: pointer;
     ${({ $isStart }) => {
         if ($isStart) {
             return css`
@@ -50,22 +51,19 @@ export const SRoot = styled(SBaseTextField.Root)<TBaseTextField.SRoot>`
                     color: props.$color,
                     disabled: props.$disabled,
                     variant: props.$colorVariant,
-                    hover: props.$_isFocused,
+                    hover: false,
                 })};
         }
-    }
-    &:hover {
-        ${SIconContainer} {
-            svg {
-                color: ${(props) =>
-                    getColorIcon({
-                        cs: props.$colors,
-                        color: props.$color,
-                        disabled: props.$disabled,
-                        variant: props.$colorVariant,
-                        hover: props.$_isActiveHover,
-                    })};
-            }
+
+        &:hover svg {
+            color: ${(props) =>
+                getColorIcon({
+                    cs: props.$colors,
+                    color: props.$color,
+                    disabled: props.$disabled,
+                    variant: props.$colorVariant,
+                    hover: true,
+                })};
         }
     }
 `;
@@ -95,23 +93,28 @@ export const MainTextField = React.memo(
             const handleBlur = useCallback(() => !rest.disabled && setIsFocused(false), [rest.disabled]);
 
             const renderIconStart = useMemo(() => {
-                return renderIconTextField({
-                    icon: iconStart,
-                    size: styles.inp,
-                    sizeVariant,
-                });
+                if (!iconStart) return null;
+                return (
+                    <SIconContainer $isStart={true}>
+                        {renderIconTextField({
+                            icon: iconStart,
+                            size: styles.inp,
+                            sizeVariant,
+                        })}
+                    </SIconContainer>
+                );
             }, [iconStart, styles, sizeVariant]);
 
             const renderIconsEnd = useMemo(() => {
-                return iconsEnd?.map((icon, index) =>
-                    renderIconTextField({
-                        icon,
-                        size: styles.inp,
-                        sizeVariant,
-
-                        rest: { key: `text-field-icon-end-${index}` },
-                    })
-                );
+                return iconsEnd?.map((icon, index) => (
+                    <SIconContainer key={`text-field-icon-end-${index}`} $isStart={false}>
+                        {renderIconTextField({
+                            icon,
+                            size: styles.inp,
+                            sizeVariant,
+                        })}
+                    </SIconContainer>
+                ));
             }, [iconsEnd, styles, sizeVariant]);
 
             return (
@@ -130,7 +133,7 @@ export const MainTextField = React.memo(
                     onBlur={handleBlur}
                     {...rootProps}
                 >
-                    {renderIconStart && <SIconContainer $isStart={true}>{renderIconStart}</SIconContainer>}
+                    {renderIconStart}
 
                     <SBaseTextField.Input
                         ref={ref}
@@ -140,7 +143,8 @@ export const MainTextField = React.memo(
                         $colorVariant={colorVariant}
                         {...rest}
                     />
-                    {renderIconsEnd && <SIconContainer $isStart={false}>{renderIconsEnd}</SIconContainer>}
+
+                    {renderIconsEnd}
                 </SRoot>
             );
         }
